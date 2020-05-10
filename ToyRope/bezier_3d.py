@@ -2,8 +2,19 @@
 import numpy as np
 from scipy.special import comb
 from matplotlib import pyplot as plt
+import plotter_3d
 
-
+"""
+Number of control points
+The shape of Bezier curves are defined by N points
+where N-1 points determine the highest order of the
+polynomial.
+e.g., N = 2 -> linear curve
+      N = 3 -> quadratic curve
+      N = 4 -> cubic curve
+"""
+N_CONTROL_POINTS = 6
+N_DIMS = 3
 POINT_SCALE = 200
 
 
@@ -30,27 +41,21 @@ def bezier_curve(ctrl_points, nTimes=1000):
     """
 
     nPoints = len(ctrl_points)
-    x_points = ctrl_points[:, 0]
-    y_points = ctrl_points[:, 1]
+    n_dims = len(ctrl_points[0])
 
     t = np.linspace(0.0, 1.0, nTimes)
 
     polynomial_array = np.array([bernstein_poly(i, nPoints-1, t) for i in range(0, nPoints)])
 
-    xvals = np.dot(x_points, polynomial_array)
-    yvals = np.dot(y_points, polynomial_array)
+    curve = np.array([]).reshape(nTimes, 0)
+    for d in range(ctrl_points.shape[1]):
+        dim = np.dot(ctrl_points[:, d], polynomial_array).reshape(-1, 1)
+        curve = np.hstack((curve, dim))
 
-    return np.vstack((xvals, yvals)).T
+    return curve
 
 
 if __name__ == "__main__":
-    nPoints = 4
-    points = POINT_SCALE * np.random.rand(nPoints, 2)
+    points = POINT_SCALE * np.random.rand(N_CONTROL_POINTS, N_DIMS)
     curve_points = bezier_curve(points, nTimes=1000)
-
-    plt.plot(curve_points[:, 0], curve_points[:, 1])
-    plt.plot(points[:, 0], points[:, 1], "ro")
-    for nr in range(len(points)):
-        plt.text(points[nr][0], points[nr][1], nr)
-
-    plt.show()
+    plotter_3d.plot_curve(curve_points, points)
