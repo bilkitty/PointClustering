@@ -12,9 +12,9 @@ import pyvista as pv
 import numpy as np
 from pypcd import pypcd as pcd
 import pprint
+from utils import cloud_from_points
 
-NORMAL_MU = 0
-NORMAL_STD = 0.05
+
 TH_RANGE = 1.5 * np.pi
 Z_RANGE = 0.1
 pp = pprint.PrettyPrinter(indent=2)
@@ -39,17 +39,6 @@ def lines_from_points(points):
     cells[:, 2] = np.arange(1, len(points), dtype=np.int)
     poly.lines = cells
     return poly
-
-
-def cloud_from_points(points):
-    point_cloud = points
-    for i in range(3):
-        N = len(points)
-        noise = np.column_stack((np.random.normal(NORMAL_MU, NORMAL_STD, N),
-             np.random.normal(NORMAL_MU, NORMAL_STD, N),
-             np.random.normal(NORMAL_MU, NORMAL_STD, N)))
-        point_cloud = np.vstack((point_cloud, points + noise))
-    return point_cloud
 
 
 def display_spline(N):
