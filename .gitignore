@@ -1,8 +1,8 @@
 ToyRope/venv
 ToyRope/__pycache__
 ToyRope/.idea*
-KMeans/venv
-KMeans/__pycache__
-KMeans/.idea*
-KMeans/results
+IterativeRefinement/venv
+IterativeRefinement/__pycache__
+IterativeRefinement/.idea*
+IterativeRefinement/results
 Visualize/__pycache__

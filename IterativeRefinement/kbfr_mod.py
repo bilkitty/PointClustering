@@ -39,7 +39,7 @@ MAX_ITERATIONS = 40
 K_CLUSTERS = 10
 PLOT_FREQ = 5
 FIGURES_DIR = "/home/bilkit/Workspace/PointClustering/KMeans/results"
-SAVE = True
+SAVE = False
 UNIQUE_ID = rand.randint(0, 100000)
 CSV_FILENAME = "Mall_Customers.csv"
 
@@ -90,6 +90,13 @@ def k_means_clustering(K, P, key_points, max_iter=MAX_ITERATIONS):
     # Now, we iteratively update the clusters. We stop after
     # the cluster centers converge, or we reach a timeout.
     for itr in range(max_iter):
+        if itr % PLOT_FREQ == 0:
+            figure_filepath = os.path.join(FIGURES_DIR, f"{str(N)}d_{str(UNIQUE_ID)}_{str(itr)}") if SAVE else ""
+            plot_clusters(clusters, C_nxk, figure_filepath, key_points)
+            should_save = raw_input("Save this figure? (Y/N)")
+            if should_save.lower == 'y':
+                plot_clusters(clusters, C_nxk, os.path.join(FIGURES_DIR, f"{str(N)}d_{str(UNIQUE_ID)}_{str(itr)}"))
+
         # Compute Euclidean distances between all points and each center
         # i.e., each column is the distance of each point to kth center
         ED_mxk = np.array([]).reshape(M, 0)
@@ -111,29 +118,14 @@ def k_means_clustering(K, P, key_points, max_iter=MAX_ITERATIONS):
             cluster_idx = P_cluster_idx[j]
             blobs[cluster_idx] = np.hstack((blobs[cluster_idx], p.reshape(-1, 1)))
 
+        # there's a weird step here, so ignoring it for now
+
         # Update centers based on blobs
-        C_prev = C_nxk
         for k in range(1, K+1):
             if blobs[k].shape[1] != 0:
                 C_nxk[:, k - 1] = np.mean(blobs[k], axis=1)
 
         clusters = blobs
-
-
-        # Plot intermediate clusters
-        if itr % PLOT_FREQ == 0:
-            figure_filepath = os.path.join(FIGURES_DIR, f"{str(N)}d_{str(UNIQUE_ID)}_{str(itr)}")
-            if SAVE:
-                plot_clusters(clusters, C_prev, figure_filepath, key_points)
-            else:
-                # Allow saving on the fly
-                plot_clusters(clusters, C_prev, "", key_points)
-                u_response = input("Save this figure? (Y/N/Q)")
-                if u_response.lower() == 'y':
-                    plot_clusters(clusters, C_prev, figure_filepath, key_points)
-                if u_response.lower() == 'q':
-                    print("Stopped clustering.")
-                    return clusters
 
     return clusters
 
@@ -166,10 +158,11 @@ if __name__ == "__main__":
         k_clusters_3d = k_means_clustering(K_CLUSTERS, loop, control_points)
     elif mode == 4:
         loop, control_points = bezier_looped_curve(n_dims=3)
-        point_cloud = cloud_from_points(loop)
-        k_clusters_3d = k_means_clustering(K_CLUSTERS, point_cloud, control_points)
+        point_cloud = cloud_from_control_points(loop)
+        k_clusters_3d = k_means_clustering(K_CLUSTERS, loop, control_points)
     else:
         print(f"Unknown mode {mode}")
         sys.exit(1)
 
-    print("Exit.")
+    # TODO: create a curve and cluster it
+

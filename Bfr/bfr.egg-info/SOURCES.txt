@@ -1,0 +1,6 @@
+README.md
+bfr.egg-info/PKG-INFO
+bfr.egg-info/SOURCES.txt
+bfr.egg-info/dependency_links.txt
+bfr.egg-info/requires.txt
+bfr.egg-info/top_level.txt
