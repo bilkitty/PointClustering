@@ -1,0 +1,16 @@
+README.md
+bfr.egg-info/PKG-INFO
+bfr.egg-info/SOURCES.txt
+bfr.egg-info/dependency_links.txt
+bfr.egg-info/requires.txt
+bfr.egg-info/top_level.txt
+tests/__init__.py
+tests/context.py
+tests/test_clustlib.py
+tests/test_demo.py
+tests/test_model.py
+tests/test_modellib.py
+tests/test_objective.py
+tests/test_plot.py
+tests/test_ptlib.py
+tests/test_setlib.py
