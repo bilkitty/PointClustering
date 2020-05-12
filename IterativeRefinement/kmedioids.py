@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 """
-src: https://medium.com/machine-learning-algorithms-from-scratch/k-means-clustering-from-scratch-in-python-1675d38eee42
+src: https://towardsdatascience.com/k-medoids-clustering-on-iris-data-set-1931bf781e05
 
 Clustering algorithm summary
 
 Given a point set P, we want to create k-clusters such that
 points belonging to each cluster have higher similarity than
-those belonging to other clusters. A simple example is spatial
-grouping of points by a Euclidean distance threshold.
+those belonging to other clusters. Contrary to k-means
+clustering, the median point of a cluster center defines
+its center.
 
 1. initialization of cluster centers
     non-trivial if we seek an efficient algo
@@ -19,7 +20,7 @@ grouping of points by a Euclidean distance threshold.
       assign it to the nearest one
 3. compute new cluster centers
     for each cluster
-      compute new centroid as avg of all cluster members
+
 4. iterate steps 2 and 3
 
 """
@@ -42,7 +43,6 @@ PLOT_FREQ = 5
 FIGURES_DIR = "/home/bilkit/Workspace/PointClustering/IterativeRefinement/results"
 SAVE = True
 UNIQUE_ID = rand.randint(0, 100000)
-CSV_FILENAME = "Mall_Customers.csv"
 
 
 def load_data(filepath):
@@ -58,6 +58,12 @@ def create_point_set(csv_data, c1, c2, c3=-1):
     else:
         assert(0 <= c3 < csv_data.shape[1]), f"{c3} is out of bounds [0,{csv_data.shape[1]}]"
         return csv_data.iloc[:, [c1, c2, c3]].values
+
+
+def check_convergence(C, C_prime):
+    # TODO: fix this stopping condition
+    #return set([tuple(x) for x in C]) == set([tuple(x) for x in C_prime])
+    return False
 
 
 def compute_inner_cluster_distances(points, cluster_center):
@@ -76,9 +82,9 @@ def compute_inner_cluster_distances(points, cluster_center):
         center.
     """
     # TODO: double check this assertion
-    # assert(points.shape[0] == cluster_center.shape[0]), "N-dims (axis 0) are mis-matched"
+    #assert(points.shape[0] == cluster_center.shape[0]), "N-dims (axis 0) are mis-matched"
     # This result is a vector (1xM) of euclidean ED_mxk of M points
-    d_points_to_center = np.sum((points - cluster_center) ** P_MINKOWSKI, axis=1)
+    d_points_to_center = np.sum((points - cluster_center)**P_MINKOWSKI, axis=1)
     return d_points_to_center.reshape(-1, 1)
 
 
@@ -89,7 +95,7 @@ def compute_sse(clusters, centers):
     return sse
 
 
-def k_means_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS):
+def k_map_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS):
     """
     Computes K clusters from a point set P.
     Input
@@ -120,23 +126,13 @@ def k_means_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS):
     # Now, we iteratively update the clusters. We stop after
     # the cluster centers converge, or we reach a timeout.
     for itr in range(max_iter):
-        # Compute Euclidean distances between all points and each center
-        # i.e., each column is the distance of each point to kth center
-        ED_mxk = np.array([]).reshape(M, 0)
+        D_mxk = np.array([]).reshape(M, 0)
         for k in range(K):
-            # This result is a vector (1xM) of euclidean ED_mxk of M points
-            d_point_to_center = np.sum((P - C_nxk[:, k])**P_MINKOWSKI, axis=1)
-            d_point_to_center = d_point_to_center.reshape(-1, 1)
-            ED_mxk = np.hstack((ED_mxk, d_point_to_center))
-            # NOTE: input to linalg.norm is restricted to 1xN or 2xN, so much slower :/
-            # This result is a vector (1xM) of euclidean ED_mxk of M points
-            #v_point_to_center = np.zeros((M, 1))
-            #for j, p in enumerate(P):
-            #    v_point_to_center[j] = np.linalg.norm(p - C_nxk[:, k], ord=P_MINKOWSKI, axis=0)
-            #ED_mxk = np.c_[ED_mxk, v_point_to_center]
+            D_k = compute_inner_cluster_distances(P, C_nxk[:, k])
+            D_mxk = np.hstack((D_mxk, D_k))
 
         # Generate cluster ids (1-based index)
-        P_cluster_idx = np.argmin(ED_mxk, axis=1) + 1
+        P_cluster_idx = np.argmin(D_mxk, axis=1) + 1
 
         # Populate blobs (i.e., intermediate clusters)
         blobs = {}
@@ -147,19 +143,31 @@ def k_means_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS):
             cluster_idx = P_cluster_idx[j]
             blobs[cluster_idx] = np.hstack((blobs[cluster_idx], p.reshape(-1, 1)))
 
-        # Update centers based on blobs
-        C_prev = C_nxk
+        # Update clusuter centers
+        C_prev = C_nxk.copy()
         for k in range(1, K+1):
-            if blobs[k].shape[1] != 0:
-                C_nxk[:, k - 1] = np.mean(blobs[k], axis=1)
+            if blobs[k].shape[1] == 0:
+                continue
 
-        clusters = blobs
-        sse = np.sum(np.multiply(ED_mxk, ED_mxk))
+            # Search for new medioid amongst all cluster points
+            k_idx = k - 1
+            D_k_sum = np.sum(D_mxk[:, k_idx])
+            for p in blobs[k].T:
+                D_k_sum_prime = np.sum(compute_inner_cluster_distances(blobs[k], p.reshape(-1, 1)))
+
+                if D_k_sum_prime < D_k_sum:
+                    D_k_sum = D_k_sum_prime
+                    C_nxk[:, k_idx] = p
+
+        if check_convergence(C_prev, C_nxk):
+            break
+        else:
+            clusters = blobs
 
 
         # Plot intermediate clusters
         if itr % PLOT_FREQ == 0:
-            figure_filepath = os.path.join(FIGURES_DIR, f"kmean_{str(N)}d_{str(UNIQUE_ID)}_{str(itr)}")
+            figure_filepath = os.path.join(FIGURES_DIR, f"kmed_{str(N)}d_{str(UNIQUE_ID)}_{str(itr)}")
             if SAVE:
                 plot_clusters(clusters, C_prev, figure_filepath, key_points)
             else:
@@ -177,7 +185,7 @@ def k_means_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("""Usage:\n\tkmeans.py <int_mode>\n
+        print("""Usage:\n\tkmediods.py <int_mode>\n
 modes: 
 \t0 - marketing data (2D), 
 \t1 - marketing data (3D), 
@@ -193,24 +201,24 @@ modes:
         print(f"loaded data:\n{data.describe}")
 
         points_2d = create_point_set(data, 3, 4)
-        k_clusters_2d, sse = k_means_clustering(K_CLUSTERS, points_2d)
+        k_clusters_2d, sse = k_map_clustering(K_CLUSTERS, points_2d)
     elif mode == 1:
         csv_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), )
         data = load_data(csv_filepath)
         print(f"loaded data:\n{data.describe}")
 
         points_3d = create_point_set(data, 3, 4, 2)
-        k_clusters_3d, sse = k_means_clustering(K_CLUSTERS, points_3d)
+        k_clusters3d, sse = k_map_clustering(K_CLUSTERS, points_3d)
     elif mode == 2:
         curve = bezier_curve(10 * np.random.rand(5, 3))
-        k_clusters_3d, sse = k_means_clustering(K_CLUSTERS, curve)
+        k_clusters3d, sse = k_map_clustering(K_CLUSTERS, curve)
     elif mode == 3:
         loop, control_points = bezier_looped_curve(n_dims=3)
-        k_clusters_3d, sse = k_means_clustering(K_CLUSTERS, loop, control_points)
+        k_clusters3d, sse = k_map_clustering(K_CLUSTERS, loop, control_points)
     elif mode == 4:
         loop, control_points = bezier_looped_curve(n_dims=3)
         point_cloud = cloud_from_points(loop)
-        k_clusters_3d, sse = k_means_clustering(K_CLUSTERS, point_cloud, control_points)
+        k_clusters3d, sse = k_map_clustering(K_CLUSTERS, point_cloud, control_points)
     else:
         print(f"Unknown mode {mode}")
         sys.exit(1)

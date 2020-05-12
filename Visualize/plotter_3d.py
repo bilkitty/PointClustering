@@ -5,6 +5,9 @@ import os.path as path
 import pickle
 
 
+C_MAP = "Spectral"
+
+
 def plot_curve(bezier_curve, ctrl_points, filepath=""):
     assert(bezier_curve.shape[1] == 3), f"expected 3-d bezier, got: {bezier_curve}"
     assert(ctrl_points.shape[1] == 3), f"expected 3-d points, got: {ctrl_points}"
@@ -50,10 +53,11 @@ def plot_clusters(clusters, centers, filepath="", key_points=None):
             ax.scatter(clusters[idx][0, :],  # plot x
                         clusters[idx][1, :],  # plot y
                         clusters[idx][2, :],  # plot z
-                        cmap="coolwarm", s=5)
+                        cmap=C_MAP, s=5)
 
     # Plot centers
     ax.scatter(centers[0, :], centers[1, :], centers[2, :], s=30, marker="s", c="black")
+    #ax.scatter(key_points[0, :], key_points[1, :], key_points[2, :], s=30, marker="o", c="red")
     plt.xlabel("x")
     plt.ylabel("y")
     plt.ylabel("z")

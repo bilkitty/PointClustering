@@ -16,6 +16,8 @@ e.g., N = 2 -> linear curve
 N_CONTROL_POINTS = 5
 N_DIMS = 3
 POINT_SCALE = 20
+LOOP_MIN_SEP = 0.3
+LOOP_MAX_SEP = 0.8
 DEMO_LOOP = True
 
 
@@ -75,7 +77,7 @@ def bezier_looped_curve(n_dims, t_resolution=1000):
     rand_axis_shift[:, rand_axis] = rand_shift[:, rand_axis]
 
     next_shift = np.subtract(c0, c4)
-    rand_offset = np.random.uniform(0, 0.5) * (next_shift + np.ones(n_dims))
+    rand_offset = np.random.uniform(LOOP_MIN_SEP, LOOP_MAX_SEP) * (next_shift + np.ones(n_dims))
     c1 = c0 - next_shift
     c2 = c4 + next_shift
     c3 = c0 + rand_offset
