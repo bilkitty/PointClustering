@@ -104,9 +104,16 @@ def plot_hierarchical_clusters(points, clusters, key_points=None, filepath=""):
     plt.xlabel("x")
     plt.ylabel("y")
 
-    if filepath is "":
+    todo_save = filepath is not ""
+    if not todo_save:
         plt.show()
-    else:
+        u_response = input("Save this figure? (Y/N/Q)")
+        todo_save = u_response.lower() == 'y'
+
+    if todo_save:
+        u_response = input("Where? (directory path)")
+        if filepath is "":
+            filepath = path.join(u_response, "hierarchical_clusters_plot.png")
         # Ordinary save for quick peek - not interactive
         plt.savefig(filepath)
         # Save inputs to regenerate interactive figure later
