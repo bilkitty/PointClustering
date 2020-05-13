@@ -28,16 +28,22 @@ def plot_curve(bezier_curve, ctrl_points, filepath=""):
 
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    ax.set_zlabel("z")
 
     if filepath is "":
         plt.show()
     else:
-        #TODO: save inputs for later as in plot_clusters
+        # Ordinary save for quick peek - not interactive
         plt.savefig(filepath)
-        pickle_file = open(filepath.split(".")[0] + ".pickle", 'wb')
-        pickle.dump(plt.gcf(), pickle_file)
-        pickle_file.close()
+        # Save inputs to regenerate interactive figure later
+        pickle_file = filepath.split(".")[0] + ".pickle"
+        inputs = {
+           "bezier_curve" : bezier_curve,
+           "ctrl_points" : ctrl_points
+        }
+
+        with open(pickle_file, 'wb') as f:
+            pickle.dump(inputs, f)
+        print(f"saved inputs to {pickle_file}")
 
 
 def plot_clusters(clusters, centers, filepath="", key_points=None):
@@ -50,17 +56,17 @@ def plot_clusters(clusters, centers, filepath="", key_points=None):
         idx = k + 1
         # Plot clusters
         if clusters[idx].shape[1] != 0:
-            ax.scatter(clusters[idx][0, :],  # plot x
-                        clusters[idx][1, :],  # plot y
-                        clusters[idx][2, :],  # plot z
-                        cmap=C_MAP, s=5)
+            ax.scatter(clusters[idx][0, :],
+                       clusters[idx][1, :],
+                       clusters[idx][2, :],
+                       cmap=C_MAP,
+                       s=5)
 
     # Plot centers
     ax.scatter(centers[0, :], centers[1, :], centers[2, :], s=30, marker="s", c="black")
-    #ax.scatter(key_points[0, :], key_points[1, :], key_points[2, :], s=30, marker="o", c="red")
+    ax.scatter(key_points[0, :], key_points[1, :], key_points[2, :], s=5, marker="o", c="red")
     plt.xlabel("x")
     plt.ylabel("y")
-    plt.ylabel("z")
 
     if filepath is "":
         plt.show()
@@ -68,16 +74,51 @@ def plot_clusters(clusters, centers, filepath="", key_points=None):
         # Ordinary save for quick peek - not interactive
         plt.savefig(filepath)
         # Save inputs to regenerate interactive figure later
-        pickle_file = open(filepath.split(".")[0] + ".pickle", 'wb')
+        pickle_file = filepath.split(".")[0] + ".pickle"
         inputs = {
            "clusters" : clusters,
            "centers" : centers,
            "key_points" : key_points,
         }
-        pickle.dump(inputs, pickle_file)
-        pickle_file.close()
+
+        with open(pickle_file, 'wb') as f:
+            pickle.dump(inputs, f)
+        print(f"saved inputs to {pickle_file}")
 
     plt.clf()
     plt.close()
 
 
+def plot_hierarchical_clusters(points, clusters, key_points=None, filepath=""):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    # Plot clusters
+    ax.scatter(points[:, 0],
+               points[:, 1],
+               points[:, 2],
+               c=clusters,
+               cmap=C_MAP,
+               s=5)
+
+    ax.scatter(key_points[0, :], key_points[1, :], key_points[2, :], s=5, marker="o", c="red")
+    plt.xlabel("x")
+    plt.ylabel("y")
+
+    if filepath is "":
+        plt.show()
+    else:
+        # Ordinary save for quick peek - not interactive
+        plt.savefig(filepath)
+        # Save inputs to regenerate interactive figure later
+        pickle_file = filepath.split(".")[0] + ".pickle"
+        inputs = {
+           "clusters" : clusters,
+           "points" : points,
+           "key_points" : key_points,
+        }
+        with open(pickle_file, 'wb') as f:
+            pickle.dump(inputs, f)
+        print(f"saved inputs to {pickle_file}")
+
+    plt.clf()
+    plt.close()

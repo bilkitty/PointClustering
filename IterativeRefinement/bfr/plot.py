@@ -77,8 +77,9 @@ class BfrPlot:
             else:
                 self.axis.fill(shape[0], shape[1], color=col, alpha=0.2, label=label)
         _, labels = self.axis.get_legend_handles_labels()
-        self.axis.legend(legend_entries, labels, loc=1)
+        #self.axis.legend(legend_entries, labels, loc=1)
         matplotlib.pyplot.show()
+
         matplotlib.pyplot.close("all")
 
 

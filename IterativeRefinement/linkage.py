@@ -18,12 +18,12 @@ from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 from ToyRope.bezier_3d import bezier_curve, bezier_looped_curve
 from ToyRope.utils import cloud_from_points
 
-MAX_ITERATIONS = 40
-K_CLUSTERS = 10
+LINK_METHOD = 'median'
+K_CLUSTERS = 30
 P_MINKOWSKI = 2
 PLOT_FREQ = 5
 FIGURES_DIR = "/home/bilkit/Workspace/PointClustering/IterativeRefinement/results"
-SAVE = True
+SAVE = False
 UNIQUE_ID = rand.randint(0, 100000)
 
 
@@ -65,21 +65,19 @@ def compute_sse(clusters, centers):
 def single_linkage_clustering(K, P, key_points=None):
     M = P.shape[0] # cardinality
     N = P.shape[1] # dimensions
-    plot_clusters = plotter_2d.plot_clusters if N == 2 else plotter_3d.plot_clusters
 
-    Z = linkage(P, 'single')
-    #dn = dendrogram(Z)
+    Z = linkage(P, LINK_METHOD)
+
     cluster_indices = fcluster(Z, K, criterion='maxclust')
 
     clusters = {}
     for k in range(1, K):
         clusters[k] = P[cluster_indices == k].reshape(N, -1)
 
-    figure_filepath = os.path.join(FIGURES_DIR, f"lkg_{str(N)}d_{str(UNIQUE_ID)}") if SAVE else ""
-    plot_clusters(clusters, np.zeros(3).reshape(3,1), figure_filepath, key_points)
 
     # TODO: compute sse
-    return clusters, 0
+    return cluster_indices, 0
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -93,17 +91,38 @@ modes:
     mode = int(sys.argv[1])
     if mode == 0:
         curve = bezier_curve(10 * np.random.rand(5, 3))
-        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, curve)
+        k_cluster_indices, sse = single_linkage_clustering(K_CLUSTERS, curve)
     elif mode == 1:
         loop, control_points = bezier_looped_curve(n_dims=3)
-        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, loop, control_points)
+        k_cluster_indices, sse = single_linkage_clustering(K_CLUSTERS, loop, control_points)
     elif mode == 2:
         loop, control_points = bezier_looped_curve(n_dims=3)
         point_cloud = cloud_from_points(loop)
-        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, point_cloud, control_points)
+        k_cluster_indices, sse = single_linkage_clustering(K_CLUSTERS, point_cloud, control_points)
     else:
         print(f"Unknown mode {mode}")
         sys.exit(1)
+
+
+    figure_filepath = os.path.join(FIGURES_DIR, f"lkg_{str(N)}d_{str(UNIQUE_ID)}") if SAVE else ""
+    plotter_3d.plot_hierarchical_clusters(P, cluster_indices, key_points, figure_filepath)
+
+    from matplotlib import pyplot as plt
+    plt.title('Hierarchical Clustering Dendrogram (truncated)')
+    plt.xlabel('sample index')
+    plt.ylabel('distance')
+    dn = dendrogram(Z,
+                    truncate_mode='lastp',  # show only the last p merged clusters
+                    p=K,  # show only the last p merged clusters
+                    show_leaf_counts=False,  # otherwise numbers in brackets are counts
+                    leaf_rotation=90.0,
+                    leaf_font_size=12,
+                    show_contracted=True)  # to get a distribution impression in truncated branches
+    if SAVE:
+        plt.savefig(figure_filepath)
+    else:
+        plt.show()
+    plt.close()
 
     print(f"sse: {sse: 0.4f}")
     print("Exit.")

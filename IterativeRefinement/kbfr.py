@@ -29,6 +29,7 @@ import random as rand
 import sys
 import os
 import bfr
+import pickle
 import Visualize.plotter_2d as plotter_2d
 import Visualize.plotter_3d as plotter_3d
 
@@ -39,6 +40,10 @@ K_CLUSTERS = 10
 FIGURES_DIR = "/home/bilkit/Workspace/PointClustering/IterativeRefinement/results"
 SAVE = False
 UNIQUE_ID = rand.randint(0, 100000)
+EPSILON = 0.002
+BFR_INIT_ROUNDS = 10
+BFR_MAHAL_FACTOR = 1.5
+BFR_EUCL_THRESH = 0.2
 
 
 def load_data(filepath):
@@ -74,13 +79,14 @@ def BFR(K, P, key_points=None):
     """
     M = P.shape[0] # cardinality
     N = P.shape[1] # dimensions
+    pts = P.copy()
     plot_clusters = plotter_2d.plot_clusters if N == 2 else plotter_3d.plot_clusters
 
-    bfr_model = bfr.Model(mahalanobis_factor=1.0,
-                          euclidean_threshold=0.3,
-                          merge_threshold=2.0,
+    bfr_model = bfr.Model(mahalanobis_factor=BFR_MAHAL_FACTOR,
+                          euclidean_threshold=BFR_EUCL_THRESH,
+                          merge_threshold=EPSILON,
                           dimensions=N,
-                          init_rounds=40,
+                          init_rounds=BFR_INIT_ROUNDS,
                           nof_clusters=K)
 
     bfr_model.fit(P)
@@ -93,10 +99,29 @@ def BFR(K, P, key_points=None):
     centers = bfr_model.centers().reshape(N, -1)
     clusters = {}
     for k in range(1, K):
-        clusters[k] = P.reshape(N, -1)#  P[cluster_indices == k].reshape(N, -1)
+        clusters[k] = P[cluster_indices == k].reshape(N, -1)
 
-    figure_filepath = os.path.join(FIGURES_DIR, f"bfr_{str(N)}d_{str(UNIQUE_ID)}") if SAVE else ""
-    plot_clusters(clusters, centers, figure_filepath, key_points)
+    figure_filepath = os.path.join(FIGURES_DIR, f"bfr_{str(N)}d_{str(UNIQUE_ID)}.png") if SAVE else ""
+    plot_clusters(clusters, centers, figure_filepath, pts.reshape(N, -1))
+
+    bfr_plot = bfr.plot.BfrPlot(bfr_model, P)
+    bfr_plot.show()
+
+    u_response = input("Save this figure? (Y/N/Q)")
+    if u_response.lower() == 'y':
+        # Save inputs to regenerate interactive figure later
+        pickle_file = os.path.join(FIGURES_DIR, f"bfr_{str(N)}d_{str(UNIQUE_ID)}.pickle")
+        inputs = {
+           "bfr_model" : bfr_model,
+           "points" : P,
+           "key_points" : key_points,
+            "K" : K
+        }
+        pickle.dump(inputs, open(pickle_file, 'wb'))
+        pickle_file.close()
+        print(f"saved inputs to {pickle_file}")
+    if u_response.lower() == 'q':
+        print("Stopped clustering.")
 
     return clusters, sse
 
@@ -125,7 +150,6 @@ modes:
         k_clusters_2d, sse = BFR(K_CLUSTERS, curve, control_points)
     elif mode == 2:
         loop, control_points = bezier_looped_curve(n_dims=3)
-        plotter_3d.plot_curve(loop, control_points)
         k_clusters_3d, sse = BFR(K_CLUSTERS, loop, control_points)
     elif mode == 3:
         loop, control_points = bezier_looped_curve(n_dims=3)

@@ -3,6 +3,7 @@ import numpy as np
 from scipy.special import comb
 from matplotlib import pyplot as plt
 import Visualize.plotter_3d as plotter_3d
+from ToyRope.utils import cloud_from_points
 
 """
 Number of control points
