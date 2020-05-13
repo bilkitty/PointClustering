@@ -39,7 +39,7 @@ from ToyRope.utils import cloud_from_points
 MAX_ITERATIONS = 40
 K_CLUSTERS = 10
 P_MINKOWSKI = 2
-PLOT_FREQ = 5
+PLOT_FREQ = MAX_ITERATIONS - 1
 FIGURES_DIR = "/home/bilkit/Workspace/PointClustering/IterativeRefinement/results"
 SAVE = True
 UNIQUE_ID = rand.randint(0, 100000)
@@ -95,7 +95,7 @@ def compute_sse(clusters, centers):
     return sse
 
 
-def k_map_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS):
+def k_map_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS, unique_id=UNIQUE_ID):
     """
     Computes K clusters from a point set P.
     Input
@@ -149,7 +149,7 @@ def k_map_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS):
             if blobs[k].shape[1] == 0:
                 continue
 
-            # Search for new medioid amongst all cluster points
+            # Search for new medoid amongst all cluster points
             k_idx = k - 1
             D_k_sum = np.sum(D_mxk[:, k_idx])
             for p in blobs[k].T:
@@ -167,7 +167,7 @@ def k_map_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS):
 
         # Plot intermediate clusters
         if itr % PLOT_FREQ == 0:
-            figure_filepath = os.path.join(FIGURES_DIR, f"kmed_{str(N)}d_{str(UNIQUE_ID)}_{str(itr)}")
+            figure_filepath = os.path.join(FIGURES_DIR, f"kmed_{str(N)}d_{str(unique_id)}_{str(itr)}.png")
             if SAVE:
                 plot_clusters(clusters, C_prev, figure_filepath, key_points)
             else:

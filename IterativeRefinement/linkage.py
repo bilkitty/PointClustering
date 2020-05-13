@@ -19,11 +19,11 @@ from ToyRope.bezier_3d import bezier_curve, bezier_looped_curve
 from ToyRope.utils import cloud_from_points
 
 LINK_METHOD = 'median'
-K_CLUSTERS = 30
+K_CLUSTERS = 20
 P_MINKOWSKI = 2
 PLOT_FREQ = 5
 FIGURES_DIR = "/home/bilkit/Workspace/PointClustering/IterativeRefinement/results"
-SAVE = False
+SAVE = True
 UNIQUE_ID = rand.randint(0, 100000)
 
 
@@ -62,7 +62,7 @@ def compute_sse(clusters, centers):
     return sse
 
 
-def single_linkage_clustering(K, P, key_points=None):
+def single_linkage_clustering(K, P, key_points=None, unique_id=UNIQUE_ID):
     M = P.shape[0] # cardinality
     N = P.shape[1] # dimensions
 
@@ -74,37 +74,7 @@ def single_linkage_clustering(K, P, key_points=None):
     for k in range(1, K):
         clusters[k] = P[cluster_indices == k].reshape(N, -1)
 
-
-    # TODO: compute sse
-    return cluster_indices, 0
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("""Usage:\n\tlinkage.py <int_mode>\n
-modes: 
-\t0 - bezier curves (2D), 
-\t1 - bezier curves (3D), 
-\t2 - bezier point cloud (3D)""")
-        sys.exit(1)
-
-    mode = int(sys.argv[1])
-    if mode == 0:
-        curve = bezier_curve(10 * np.random.rand(5, 3))
-        k_cluster_indices, sse = single_linkage_clustering(K_CLUSTERS, curve)
-    elif mode == 1:
-        loop, control_points = bezier_looped_curve(n_dims=3)
-        k_cluster_indices, sse = single_linkage_clustering(K_CLUSTERS, loop, control_points)
-    elif mode == 2:
-        loop, control_points = bezier_looped_curve(n_dims=3)
-        point_cloud = cloud_from_points(loop)
-        k_cluster_indices, sse = single_linkage_clustering(K_CLUSTERS, point_cloud, control_points)
-    else:
-        print(f"Unknown mode {mode}")
-        sys.exit(1)
-
-
-    figure_filepath = os.path.join(FIGURES_DIR, f"lkg_{str(N)}d_{str(UNIQUE_ID)}") if SAVE else ""
+    figure_filepath = os.path.join(FIGURES_DIR, f"lkg_{str(N)}d_{str(unique_id)}.png") if SAVE else ""
     plotter_3d.plot_hierarchical_clusters(P, cluster_indices, key_points, figure_filepath)
 
     from matplotlib import pyplot as plt
@@ -122,7 +92,36 @@ modes:
         plt.savefig(figure_filepath)
     else:
         plt.show()
+
     plt.close()
+
+    # TODO: compute sse
+    return cluster_indices, float('inf')
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("""Usage:\n\tlinkage.py <int_mode>\n
+modes: 
+\t0 - bezier curves (2D), 
+\t1 - bezier curves (3D), 
+\t2 - bezier point cloud (3D)""")
+        sys.exit(1)
+
+    mode = int(sys.argv[1])
+    if mode == 0:
+        curve = bezier_curve(10 * np.random.rand(5, 3))
+        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, curve)
+    elif mode == 1:
+        loop, control_points = bezier_looped_curve(n_dims=3)
+        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, loop, control_points)
+    elif mode == 2:
+        loop, control_points = bezier_looped_curve(n_dims=3)
+        point_cloud = cloud_from_points(loop)
+        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, point_cloud, control_points)
+    else:
+        print(f"Unknown mode {mode}")
+        sys.exit(1)
 
     print(f"sse: {sse: 0.4f}")
     print("Exit.")

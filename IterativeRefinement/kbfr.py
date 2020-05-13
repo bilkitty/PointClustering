@@ -38,7 +38,7 @@ from ToyRope.utils import cloud_from_points
 
 K_CLUSTERS = 10
 FIGURES_DIR = "/home/bilkit/Workspace/PointClustering/IterativeRefinement/results"
-SAVE = False
+SAVE = True
 UNIQUE_ID = rand.randint(0, 100000)
 EPSILON = 0.002
 BFR_INIT_ROUNDS = 10
@@ -61,7 +61,7 @@ def create_point_set(csv_data, c1, c2, c3=-1):
         return csv_data.iloc[:, [c1, c2, c3]].values
 
 
-def BFR(K, P, key_points=None):
+def BFR(K, P, key_points=None, unique_id=UNIQUE_ID):
     """
     Computes K clusters from a point set P.
     Input
@@ -101,16 +101,13 @@ def BFR(K, P, key_points=None):
     for k in range(1, K):
         clusters[k] = P[cluster_indices == k].reshape(N, -1)
 
-    figure_filepath = os.path.join(FIGURES_DIR, f"bfr_{str(N)}d_{str(UNIQUE_ID)}.png") if SAVE else ""
-    plot_clusters(clusters, centers, figure_filepath, pts.reshape(N, -1))
-
     bfr_plot = bfr.plot.BfrPlot(bfr_model, P)
     bfr_plot.show()
 
     u_response = input("Save this figure? (Y/N/Q)")
     if u_response.lower() == 'y':
         # Save inputs to regenerate interactive figure later
-        pickle_file = os.path.join(FIGURES_DIR, f"bfr_{str(N)}d_{str(UNIQUE_ID)}.pickle")
+        pickle_file = os.path.join(FIGURES_DIR, f"bfr_{str(N)}d_{str(unique_id)}.pickle")
         inputs = {
            "bfr_model" : bfr_model,
            "points" : P,
