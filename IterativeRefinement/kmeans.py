@@ -159,7 +159,7 @@ def k_means_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS, unique_id
 
         # Plot intermediate clusters
         if itr % PLOT_FREQ == 0:
-            figure_filepath = os.path.join(FIGURES_DIR, f"kmean_{str(N)}d_{str(unique_id)}_{str(itr)}.png")
+            figure_filepath = os.path.join(FIGURES_DIR, f"{K}-mean_{str(N)}d_{str(unique_id)}_{str(itr)}.png")
             if SAVE:
                 plot_clusters(clusters, C_prev, figure_filepath, key_points)
             else:

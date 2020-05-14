@@ -101,24 +101,41 @@ def BFR(K, P, key_points=None, unique_id=UNIQUE_ID):
     for k in range(1, K):
         clusters[k] = P[cluster_indices == k].reshape(N, -1)
 
-    bfr_plot = bfr.plot.BfrPlot(bfr_model, P)
-    bfr_plot.show()
-
-    u_response = input("Save this figure? (Y/N/Q)")
-    if u_response.lower() == 'y':
+    if SAVE:
         # Save inputs to regenerate interactive figure later
-        pickle_file = os.path.join(FIGURES_DIR, f"bfr_{str(N)}d_{str(unique_id)}.pickle")
+        pickle_file = os.path.join(FIGURES_DIR, f"{K}-bfr_{str(N)}d_{str(unique_id)}.pickle")
         inputs = {
            "bfr_model" : bfr_model,
            "points" : P,
            "key_points" : key_points,
             "K" : K
         }
-        pickle.dump(inputs, open(pickle_file, 'wb'))
-        pickle_file.close()
+
+        with open(pickle_file, 'wb') as f:
+            pickle.dump(inputs, f)
+
         print(f"saved inputs to {pickle_file}")
-    if u_response.lower() == 'q':
-        print("Stopped clustering.")
+    else:
+        bfr_plot = bfr.plot.BfrPlot(bfr_model, P)
+        bfr_plot.show()
+
+        u_response = input("Save this figure? (Y/N/Q)")
+        if u_response.lower() == 'y':
+            # Save inputs to regenerate interactive figure later
+            pickle_file = os.path.join(FIGURES_DIR, f"{K}-bfr_{str(N)}d_{str(unique_id)}.pickle")
+            inputs = {
+               "bfr_model" : bfr_model,
+               "points" : P,
+               "key_points" : key_points,
+                "K" : K
+            }
+
+            with open(pickle_file, 'wb') as f:
+                pickle.dump(inputs, f)
+
+            print(f"saved inputs to {pickle_file}")
+        if u_response.lower() == 'q':
+            print("Stopped clustering.")
 
     return clusters, sse
 

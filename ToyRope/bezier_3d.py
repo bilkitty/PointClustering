@@ -17,7 +17,7 @@ e.g., N = 2 -> linear curve
 """
 N_CONTROL_POINTS = 4
 N_DIMS = 3
-POINT_SCALE = 20
+POINT_SCALE = 120
 LOOP_MIN_SEP = 0.3
 LOOP_MAX_SEP = 0.8
 DEMO_LOOP = True
@@ -92,7 +92,7 @@ def bezier_unlooped_curve(n_dims, t_resolution=1000):
     x_axis = 0
     shift_by = 0.75
     next_shift = np.subtract(c0, c4)
-    z_offset = 0.9 * (next_shift + np.ones(n_dims))
+    z_offset = 0.5 * (next_shift + np.ones(n_dims))
     return bezier_looped_curve_fixed(c0, c4, n_dims, shift_by, x_axis, z_offset, t_resolution)
 
 def bezier_looped_curve_fixed(c0, c4, n_dims, shift, axis, loop_offset, t_resolution=1000):

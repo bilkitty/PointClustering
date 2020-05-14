@@ -62,7 +62,7 @@ def compute_sse(clusters, centers):
     return sse
 
 
-def single_linkage_clustering(K, P, key_points=None, unique_id=UNIQUE_ID):
+def linkage_clustering(K, P, key_points=None, unique_id=UNIQUE_ID):
     M = P.shape[0] # cardinality
     N = P.shape[1] # dimensions
 
@@ -74,7 +74,7 @@ def single_linkage_clustering(K, P, key_points=None, unique_id=UNIQUE_ID):
     for k in range(1, K):
         clusters[k] = P[cluster_indices == k].reshape(N, -1)
 
-    figure_filepath = os.path.join(FIGURES_DIR, f"lkg_{str(N)}d_{str(unique_id)}.png") if SAVE else ""
+    figure_filepath = os.path.join(FIGURES_DIR, f"{K}-lkg_{str(N)}d_{str(unique_id)}.png") if SAVE else ""
     plotter_3d.plot_hierarchical_clusters(P, cluster_indices, key_points, figure_filepath)
 
     from matplotlib import pyplot as plt
@@ -111,14 +111,14 @@ modes:
     mode = int(sys.argv[1])
     if mode == 0:
         curve = bezier_curve(10 * np.random.rand(5, 3))
-        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, curve)
+        k_clusters3d, sse = linkage_clustering(K_CLUSTERS, curve)
     elif mode == 1:
         loop, control_points = bezier_looped_curve(n_dims=3)
-        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, loop, control_points)
+        k_clusters3d, sse = linkage_clustering(K_CLUSTERS, loop, control_points)
     elif mode == 2:
         loop, control_points = bezier_looped_curve(n_dims=3)
         point_cloud = cloud_from_points(loop)
-        k_clusters3d, sse = single_linkage_clustering(K_CLUSTERS, point_cloud, control_points)
+        k_clusters3d, sse = linkage_clustering(K_CLUSTERS, point_cloud, control_points)
     else:
         print(f"Unknown mode {mode}")
         sys.exit(1)

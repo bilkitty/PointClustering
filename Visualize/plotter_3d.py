@@ -5,7 +5,7 @@ import os.path as path
 import pickle
 
 
-C_MAP = "Spectral"
+CMAP = "prism"
 
 
 def plot_curve(bezier_curve, ctrl_points, filepath=""):
@@ -59,7 +59,7 @@ def plot_clusters(clusters, centers, filepath="", key_points=None):
             ax.scatter(clusters[idx][0, :],
                        clusters[idx][1, :],
                        clusters[idx][2, :],
-                       cmap=C_MAP,
+                       cmap=CMAP,
                        s=5)
 
     # Plot centers
@@ -89,7 +89,7 @@ def plot_clusters(clusters, centers, filepath="", key_points=None):
     plt.close()
 
 
-def plot_hierarchical_clusters(points, clusters, key_points=None, filepath=""):
+def plot_hierarchical_clusters(points, clusters, key_points=[], filepath=""):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     # Plot clusters
@@ -97,23 +97,17 @@ def plot_hierarchical_clusters(points, clusters, key_points=None, filepath=""):
                points[:, 1],
                points[:, 2],
                c=clusters,
-               cmap=C_MAP,
+               cmap=CMAP,
                s=5)
 
-    ax.scatter(key_points[0, :], key_points[1, :], key_points[2, :], s=5, marker="o", c="red")
+    if key_points.any():
+        ax.scatter(key_points[0, :], key_points[1, :], key_points[2, :], s=5, marker="o", c="red")
+
     plt.xlabel("x")
     plt.ylabel("y")
 
     todo_save = filepath is not ""
-    if not todo_save:
-        plt.show()
-        u_response = input("Save this figure? (Y/N/Q)")
-        todo_save = u_response.lower() == 'y'
-
     if todo_save:
-        u_response = input("Where? (directory path)")
-        if filepath is "":
-            filepath = path.join(u_response, "hierarchical_clusters_plot.png")
         # Ordinary save for quick peek - not interactive
         plt.savefig(filepath)
         # Save inputs to regenerate interactive figure later
@@ -126,6 +120,25 @@ def plot_hierarchical_clusters(points, clusters, key_points=None, filepath=""):
         with open(pickle_file, 'wb') as f:
             pickle.dump(inputs, f)
         print(f"saved inputs to {pickle_file}")
+    else:
+        plt.show()
+        u_response = input("Save this figure? (Y/N/Q)")
+        if u_response.lower() == 'y':
+            u_response = input("Where? (directory path)")
+            if filepath is "":
+                filepath = path.join(u_response, "hierarchical_clusters_plot.png")
+            # Ordinary save for quick peek - not interactive
+            plt.savefig(filepath)
+            # Save inputs to regenerate interactive figure later
+            pickle_file = filepath.split(".")[0] + ".pickle"
+            inputs = {
+               "clusters" : clusters,
+               "points" : points,
+               "key_points" : key_points,
+            }
+            with open(pickle_file, 'wb') as f:
+                pickle.dump(inputs, f)
+            print(f"saved inputs to {pickle_file}")
 
     plt.clf()
     plt.close()

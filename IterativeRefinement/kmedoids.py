@@ -167,7 +167,7 @@ def k_map_clustering(K, P, key_points=None, max_iter=MAX_ITERATIONS, unique_id=U
 
         # Plot intermediate clusters
         if itr % PLOT_FREQ == 0:
-            figure_filepath = os.path.join(FIGURES_DIR, f"kmed_{str(N)}d_{str(unique_id)}_{str(itr)}.png")
+            figure_filepath = os.path.join(FIGURES_DIR, f"{K}-med_{str(N)}d_{str(unique_id)}_{str(itr)}.png")
             if SAVE:
                 plot_clusters(clusters, C_prev, figure_filepath, key_points)
             else:
